@@ -1,0 +1,541 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#233e70"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="apple-mobile-web-app-capable" content="yes"></head><body><title>Koharu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700&family=Shippori+Mincho+B1:wght@600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column, sticky tab bar; a single flip card is the hero of the Cards view, the 8-week plan is a ruled ledger */
+:root{
+  --bg:#f3f4f6; --paper:#ffffff; --ink:#1d2433; --muted:#5f6878; --line:#d9dde4;
+  --ai:#24427a;      /* 藍 indigo accent */
+  --ai-soft:#e3e9f5;
+  --moss:#3f7a4a; --moss-soft:#e2efe3;
+  --shu:#b4492f; --shu-soft:#f6e3dd;
+  --star:#b98a1c;
+  --f-jp-display:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-jp:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-body:"Be Vietnam Pro","Zen Kaku Gothic New",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12151c; --paper:#1b2029; --ink:#e7eaf0; --muted:#9aa3b2; --line:#2e3542;
+  --ai:#8fb0ea; --ai-soft:#1f2a40; --moss:#7cc28a; --moss-soft:#1c2e21; --shu:#ec8b70; --shu-soft:#3a221c; --star:#e0b64a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151c; --paper:#1b2029; --ink:#e7eaf0; --muted:#9aa3b2; --line:#2e3542;
+  --ai:#8fb0ea; --ai-soft:#1f2a40; --moss:#7cc28a; --moss-soft:#1c2e21; --shu:#ec8b70; --shu-soft:#3a221c; --star:#e0b64a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:640px;margin:0 auto;padding-block:20px 48px;display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.wrap>*{min-width:0}
+section>div{grid-template-columns:minmax(0,1fr)}
+body{margin:0}
+select{max-width:100%;text-overflow:ellipsis}
+header h1{font-family:var(--f-jp-display);font-weight:800;font-size:1.6rem;margin:0;letter-spacing:.02em;text-wrap:balance}
+header p{margin:2px 0 0;color:var(--muted);font-size:.9rem}
+nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;gap:6px;padding-block:8px;border-bottom:1px solid var(--line)}
+nav button{flex:1;white-space:nowrap;font:500 .95rem var(--f-body);padding:9px 6px;border-radius:8px;border:1px solid transparent;background:none;color:var(--muted);cursor:pointer}
+nav button[aria-selected="true"]{background:var(--paper);color:var(--ai);border-color:var(--line)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--ai);outline-offset:2px}
+.today{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:6px}
+.eyebrow{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.today h2{margin:0;font-family:var(--f-jp);font-size:1.15rem}
+.split{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted);font-size:.85rem}
+.split b{color:var(--ink);font-weight:500}
+/* plan */
+.week{display:grid;gap:0}
+.week h3{font:700 .8rem var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--ai);margin:14px 0 6px;display:flex;justify-content:space-between}
+.week h3 span{color:var(--muted);font-weight:500;letter-spacing:0;text-transform:none}
+.day{display:grid;grid-template-columns:22px 70px 1fr;gap:10px;align-items:start;padding:9px 0;border-top:1px solid var(--line)}
+.day:last-child{border-bottom:1px solid var(--line)}
+.day input{width:18px;height:18px;margin-top:2px;accent-color:var(--moss)}
+.day .d{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.85rem}
+.day .t{min-width:0;font-family:var(--f-jp)}
+.day .t small{display:block;color:var(--muted);font-family:var(--f-body)}
+.day.rest .t{color:var(--muted)}
+.day.now{background:var(--ai-soft);border-radius:6px;margin-inline:-6px;padding-inline:6px}
+.day.done .t{text-decoration:line-through;text-decoration-color:var(--muted)}
+.chip{display:inline-block;font-size:.72rem;padding:1px 7px;border-radius:99px;background:var(--moss-soft);color:var(--moss);margin-left:6px;font-family:var(--f-body);text-decoration:none}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--moss)}
+/* cards */
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+select,.seg button,.btn{font:500 .9rem var(--f-body);padding:8px 12px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+select{flex:1 1 220px;min-width:0}
+.seg{display:flex}
+.seg button{border-radius:0;margin-left:-1px;color:var(--star)}
+.seg button:first-child{border-radius:8px 0 0 8px;margin-left:0}
+.seg button:last-child{border-radius:0 8px 8px 0}
+.seg button[aria-pressed="true"]{background:var(--ai-soft);border-color:var(--ai);position:relative}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;min-height:300px;padding:22px 20px;display:grid;align-content:center;gap:12px;cursor:pointer;user-select:none;position:relative;box-shadow:0 1px 0 var(--line)}
+.card .meta{position:absolute;top:12px;left:16px;right:16px;display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted)}
+.card .stars{color:var(--star);letter-spacing:.1em}
+.word{font-family:var(--f-jp-display);font-weight:800;font-size:clamp(3rem,16vw,4.6rem);text-align:center;line-height:1.1;letter-spacing:.04em}
+.hint{text-align:center;color:var(--muted);font-size:.85rem}
+.back{display:grid;gap:10px}
+.back .rd{font-family:var(--f-jp);font-size:1.6rem;text-align:center;color:var(--ai);font-weight:700}
+.back .hv{text-align:center;font-size:.85rem;color:var(--muted)}
+.back .hv b{color:var(--ink);letter-spacing:.05em}
+.mean{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:.98rem}
+.mean span{font-size:.72rem;font-weight:700;color:var(--muted);padding-top:3px;letter-spacing:.08em}
+.ex{border-top:1px dashed var(--line);padding-top:10px;display:grid;gap:3px}
+.ex .ja{font-family:var(--f-jp);font-size:1.05rem}
+.ex .ja mark{background:none;color:var(--ai);font-weight:700;border-bottom:2px solid var(--ai-soft)}
+.ex .tr{font-size:.86rem;color:var(--muted)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn.again{background:var(--shu-soft);color:var(--shu);border-color:transparent}
+.btn.got{background:var(--moss-soft);color:var(--moss);border-color:transparent}
+.btn{padding:12px}
+.nav2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn.step{color:var(--ai)}
+.btn.step:disabled{opacity:.4;cursor:default}
+.stat{display:flex;justify-content:space-between;font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.list{display:grid;gap:0}
+.row{display:grid;grid-template-columns:5.2rem 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.row .k{font-family:var(--f-jp-display);font-size:1.25rem;font-weight:600}
+.row .k small{display:block;font-family:var(--f-jp);font-size:.78rem;color:var(--ai)}
+.row .v{min-width:0;font-size:.88rem}
+.row .v .s{color:var(--star)}
+.row.known .k{color:var(--moss)}
+.qbox{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px 18px;display:grid;gap:14px}
+.qtype{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ai)}
+.qtext{font-family:var(--f-jp);font-size:1.25rem;line-height:1.7}
+.qtext u{text-decoration-thickness:2px;text-underline-offset:5px;font-weight:700}
+.qtext .blank{display:inline-block;min-width:4em;border-bottom:2px solid var(--ink);text-align:center;color:var(--muted)}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:12px;align-items:center;text-align:left;font:500 1.1rem var(--f-jp);padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.opt b{font:700 .85rem var(--f-body);color:var(--muted);width:1.2em}
+.opt.right{background:var(--moss-soft);border-color:var(--moss);color:var(--moss)}
+.opt.wrong{background:var(--shu-soft);border-color:var(--shu);color:var(--shu)}
+.verdict{font:700 1.3rem var(--f-body)}
+.verdict.ok{color:var(--moss)} .verdict.ng{color:var(--shu)}
+.field{display:grid;gap:6px}
+.field>span{font-size:.8rem;color:var(--muted);font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:500 .88rem var(--f-body);padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:var(--paper);color:var(--ink);cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--ai-soft);border-color:var(--ai);color:var(--ai)}
+.btn.primary{background:var(--ai);color:var(--paper);border-color:transparent}
+.score{font-family:var(--f-jp-display);font-size:3rem;font-weight:800;text-align:center;font-variant-numeric:tabular-nums}
+.linkish{background:none;border:none;color:var(--ai);font:500 .88rem var(--f-body);cursor:pointer;padding:4px 0;text-align:left}
+.note{font-size:.82rem;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.card{transition:transform .15s}.card:active{transform:scale(.99)}}
+.sync{font-size:12px;opacity:.75;white-space:nowrap}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Koharu <small style="font-size:.55em;font-weight:600;color:var(--muted)">N1 文字・語彙</small></h1>
+    <p>徹底トレーニング N1 文字・語彙 ・ 8週間 ・ 1日2時間 <span id="sync" class="sync"></span> <button id="login" class="linkish" hidden>Googleでログインして同期</button><button id="logout" class="linkish" hidden>ログアウト</button></p>
+  </header>
+  <nav role="tablist">
+    <button id="tab-plan" role="tab" aria-selected="true" data-v="plan">計画</button>
+    <button id="tab-list" role="tab" aria-selected="false" data-v="list">単語一覧</button>
+    <button id="tab-cards" role="tab" aria-selected="false" data-v="cards">カード</button>
+    <button id="tab-quiz" role="tab" aria-selected="false" data-v="quiz">クイズ</button>
+  </nav>
+
+  <section class="today" id="today"></section>
+
+  <section id="v-cards">
+    <div style="display:grid;gap:12px">
+      <div class="controls">
+        <select id="deck" aria-label="章"></select>
+        <div class="seg" role="group" aria-label="重要度">
+          <button id="s3" data-s="3" aria-pressed="true">★★★</button>
+          <button id="s2" data-s="2" aria-pressed="true">★★</button>
+          <button id="s1" data-s="1" aria-pressed="true">★</button>
+        </div>
+      </div>
+      <div class="controls">
+        <label class="note"><input type="checkbox" id="hideKnown" checked> 覚えた単語を除く</label>
+        <button class="linkish" id="shuffle">シャッフル</button>
+        <button class="linkish" id="reset">この章をリセット</button>
+      </div>
+      <div class="stat"><span id="pos"></span><span id="known"></span></div>
+      <div class="bar"><i id="kbar" style="width:0"></i></div>
+      <div class="card" id="card" tabindex="0" aria-live="polite"></div>
+      <div class="nav2">
+        <button class="btn step" id="prev">‹ 前へ</button>
+        <button class="btn step" id="next">次へ ›</button>
+      </div>
+      <div class="actions">
+        <button class="btn again" id="again">もう一度</button>
+        <button class="btn got" id="got">覚えた</button>
+      </div>
+      <p class="note">カードをタップで裏返し。「前へ・次へ」は記録せずに移動します。キー：Space 裏返し、← 前へ、→ 次へ、1 もう一度、2 覚えた。進捗はこのブラウザに保存されます。</p>
+    </div>
+  </section>
+
+  <section id="v-quiz" hidden><div id="quiz" style="display:grid;gap:12px"></div></section>
+  <section id="v-plan" hidden></section>
+  <section id="v-list" hidden><div style="display:grid;gap:12px"><div class="controls"><select id="ldeck" aria-label="章"></select></div><div class="list" id="list"></div></div></section>
+</div>
+
+<script src="firebase-config.js"></script>
+<script src="sync.js"></script>
+<script src="decks.js"></script>
+<script>
+const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const DECKS=window.DECKS||[];
+// Plan: [date, task, pages, deckId|null, kind]
+const PLAN=[
+ ["第1週","問題1 漢字読み · 漢字2字の語彙",[
+  ["2026-10-28","2音の語彙","p.10–11","L01"],
+  ["2026-10-29","3音の語彙","p.12–15","L02"],
+  ["2026-10-30","「○ん」で始まる語彙","p.16–19","L03"],
+  ["2026-10-31","「○い」で始まる語彙","p.20–23","L04"],
+  ["2026-11-01","復習日（今週の単語）","",null,"rest"],
+  ["2026-11-02","「○う」「○ゅう」「○ょう」","p.24–27","L05"],
+  ["2026-11-03","「○き」「○く」「○ち」「○つ」","p.28–31","L06"]]],
+ ["第2週","問題1 · finish section",[
+  ["2026-11-04","「○っ」 · 読み方が2つ以上ある漢字","p.32–35","L07"],
+  ["2026-11-05","な形容詞 · 「的」がつく形容詞・副詞","p.36–39","L08"],
+  ["2026-11-06","訓読みの語彙","p.40–43","L09"],
+  ["2026-11-07","漢字3字の語彙","p.44–47","L10"],
+  ["2026-11-08","復習日（今週の単語）","",null,"rest"],
+  ["2026-11-09","動詞","p.48–53","L11"],
+  ["2026-11-10","動詞が名詞化した語彙 · い形容詞","p.54–57","L12"]]],
+ ["第3週","問題1 復習 → 問題2 文脈規定",[
+  ["2026-11-11","問題1 復習問題 ＋ 苦手な単語","p.58–62"],
+  ["2026-11-12","1音の漢字による分類 ①","p.64–68","L13"],
+  ["2026-11-13","1音の漢字による分類 ②","p.69–73","L14"],
+  ["2026-11-14","2音の漢字「○ん」①","p.74–79","L15"],
+  ["2026-11-15","復習日（今週の単語）","",null,"rest"],
+  ["2026-11-16","2音の漢字「○ん」②","p.80–85","L16"],
+  ["2026-11-17","2音の漢字「○い」①","p.86–89","L17"]]],
+ ["第4週","問題2 · 漢字語彙 → 動詞",[
+  ["2026-11-18","2音の漢字「○い」②","p.90–93","L18"],
+  ["2026-11-19","2音の漢字「○う」","p.94–99","L19"],
+  ["2026-11-20","「○ゅう」「○ょう」","p.100–103","L20"],
+  ["2026-11-21","「○き」「○く」「○ち」「○つ」","p.104–109","L21"],
+  ["2026-11-22","復習日（今週の単語）","",null,"rest"],
+  ["2026-11-23","動詞 ①","p.110–116","L22"],
+  ["2026-11-24","動詞 ②","p.117–123","L23"]]],
+ ["第5週","問題2 · その他の語彙",[
+  ["2026-11-25","形容詞","p.124–131","L24"],
+  ["2026-11-26","副詞","p.132–137","L25"],
+  ["2026-11-27","カタカナ語","p.138–143","L26"],
+  ["2026-11-28","名詞・接頭語・接尾語","p.144–147","L27"],
+  ["2026-11-29","復習日（今週の単語）","",null,"rest"],
+  ["2026-11-30","問題2 復習問題","p.148–152"],
+  ["2026-12-01","予備日（遅れの調整・苦手な単語）","",null,"rest"]]],
+ ["第6週","問題3 言い換え類義",[
+  ["2026-12-02","動詞","p.154–159","L28"],
+  ["2026-12-03","な形容詞 · い形容詞","p.160–167","L29"],
+  ["2026-12-04","副詞","p.168–171","L30"],
+  ["2026-12-05","カタカナ語","p.172–175","L31"],
+  ["2026-12-06","復習日（今週の単語）","",null,"rest"],
+  ["2026-12-07","漢字語彙","p.176–181","L32"],
+  ["2026-12-08","和語・訓読み名詞 · 複合動詞 · 復習問題","p.182–188","L33"]]],
+ ["第7週","問題4 用法",[
+  ["2026-12-09","する動詞","p.192–195","L34"],
+  ["2026-12-10","名詞","p.196–199","L35"],
+  ["2026-12-11","ひらがな動詞 · 複合動詞","p.200–205","L36"],
+  ["2026-12-12","ひらがな副詞 · 形容詞 · 和語","p.206–211","L37"],
+  ["2026-12-13","復習日（今週の単語）","",null,"rest"],
+  ["2026-12-14","問題4 復習問題 ①","p.212–218"],
+  ["2026-12-15","問題4 復習問題 ②","p.219–224"]]],
+ ["第8週","実戦模試 · mock tests",[
+  ["2026-12-16","実戦模試 第1回 ＋ 間違い直し","p.226–228"],
+  ["2026-12-17","実戦模試 第2回 ＋ 間違い直し","p.229–231"],
+  ["2026-12-18","実戦模試 第3回 ＋ 間違い直し","p.232–234"],
+  ["2026-12-19","実戦模試 第4回 ＋ 間違い直し","p.235–237"],
+  ["2026-12-20","実戦模試 第5回 ＋ 間違い直し","p.238–240"],
+  ["2026-12-21","★★★ 全単語の総復習","",null,"rest"],
+  ["2026-12-22","「もう一度」の単語を総復習","",null,"rest"]]]
+];
+const SPLIT=[["40分","新しい単語"],["30分","練習問題"],["30分","カード復習"],["20分","例文の音読"]];
+const todayISO=(()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")})();
+const fmt=iso=>{const d=new Date(iso+"T00:00:00");return `${d.getMonth()+1}月${d.getDate()}日(${"日月火水木金土"[d.getDay()]})`};
+
+let done=LS.get("n1.done",{});
+let known=LS.get("n1.known",{});
+let state=LS.get("n1.state",{deck:DECKS[0]?.id,stars:[3,2,1],hide:true,view:"cards"});
+let queue=[],idx=0,flipped=false;
+
+function allDays(){return PLAN.flatMap(w=>w[2])}
+function renderToday(){
+  const days=allDays();
+  let t=days.find(d=>d[0]===todayISO)||days.find(d=>d[0]>todayISO)||days[days.length-1];
+  const deck=t[3]?DECKS.find(x=>x.id===t[3]):null;
+  const n=days.filter(d=>done[d[0]]).length;
+  document.getElementById("today").innerHTML=`
+   <div class="eyebrow">${t[0]===todayISO?"今日":"次の予定"} · ${fmt(t[0])}</div>
+   <h2>${t[1]} <span class="note">${t[2]}</span></h2>
+   <div class="split">${SPLIT.map(([m,t])=>`<span><b>${m}</b> ${t}</span>`).join("")}</div>
+   ${deck?`<button class="linkish" id="go">今日のカード ${deck.cards.length}枚を開く →</button>`:""}
+   <div class="bar" title="${n} of ${days.length} days done"><i style="width:${n/days.length*100}%"></i></div>`;
+  const go=document.getElementById("go"); if(go) go.onclick=()=>{state.deck=deck.id;save();show("cards");buildQueue();}
+}
+function renderPlan(){
+  const el=document.getElementById("v-plan");
+  el.innerHTML=PLAN.map(([wk,title,days])=>`<div class="week"><h3>${wk} · ${title}<span>${fmt(days[0][0])} – ${fmt(days[days.length-1][0])}</span></h3>${
+   days.map(d=>{const has=d[3]&&DECKS.some(x=>x.id===d[3]);
+    return `<div class="day ${d[4]==="rest"?"rest":""} ${d[0]===todayISO?"now":""} ${done[d[0]]?"done":""}">
+     <input type="checkbox" id="c${d[0]}" data-d="${d[0]}" ${done[d[0]]?"checked":""} aria-label="完了 ${d[1]}">
+     <label class="d" for="c${d[0]}">${fmt(d[0])}</label>
+     <div class="t">${d[1]}${has?`<button class="chip" data-deck="${d[3]}">カードあり</button>`:""}<small>${d[2]}</small></div></div>`}).join("")}</div>`).join("")
+   +`<p class="note">復習日：「覚えた単語を除く」をオフにして今週のカードを全部確認し、間違えた練習問題をやり直しましょう。</p>`;
+  el.querySelectorAll("input[data-d]").forEach(c=>c.onchange=()=>{done[c.dataset.d]=c.checked;LS.set("n1.done",done);renderPlan();renderToday()});
+  el.querySelectorAll("[data-deck]").forEach(b=>b.onclick=()=>{state.deck=b.dataset.deck;save();show("cards");buildQueue()});
+}
+function deck(){return DECKS.find(d=>d.id===state.deck)||DECKS[0]}
+function kkey(c){return deck().id+"|"+c.w+"|"+c.r}
+function buildQueue(shuffle){
+  const d=deck(); document.getElementById("deck").value=d.id; document.getElementById("ldeck").value=d.id;
+  queue=d.cards.filter(c=>state.stars.includes(c.s)&&!(state.hide&&known[kkey(c)]));
+  if(shuffle) for(let i=queue.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[queue[i],queue[j]]=[queue[j],queue[i]]}
+  idx=0;flipped=false;renderCard();renderList();
+}
+function esc(s){return s.replace(/[&<>"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]))}
+function renderCard(){
+  const d=deck(),el=document.getElementById("card");
+  document.getElementById("prev").disabled=idx<=0;
+  document.getElementById("next").disabled=idx>=queue.length;
+  const kn=d.cards.filter(c=>known[kkey(c)]).length;
+  document.getElementById("known").textContent=`覚えた ${kn} / ${d.cards.length}`;
+  document.getElementById("kbar").style.width=(kn/d.cards.length*100)+"%";
+  if(!queue.length||idx>=queue.length){
+    document.getElementById("pos").textContent="一周終了";
+    el.innerHTML=`<div class="word" style="font-size:2.4rem">おつかれさま</div><div class="hint">${queue.length?"一周終わりました。タップで残りの単語をもう一周。":"この条件の単語はすべて「覚えた」です。復習するには「覚えた単語を除く」をオフにしてください。"}</div>`;
+    el.onclick=()=>buildQueue(true);return;
+  }
+  const c=queue[idx];
+  document.getElementById("pos").textContent=`${idx+1} / ${queue.length} ・ ${d.title}`;
+  const meta=`<div class="meta"><span class="stars">${"★".repeat(c.s)}</span><span>${({"する":"する動詞"})[c.p]||c.p}</span></div>`;
+  if(!flipped){
+    el.innerHTML=meta+`<div class="word" lang="ja">${c.w}</div><div class="hint">声に出して読んでから、タップで確認</div>`;
+  }else{
+    const ja=esc(c.ja).split(c.w).join(`<mark>${c.w}</mark>`);
+    el.innerHTML=meta+`<div class="back">
+      <div class="word" lang="ja" style="font-size:2.4rem">${c.w}</div>
+      <div class="rd" lang="ja">${c.r}</div>
+      <div class="hv">Hán Việt: <b>${esc(c.hv.toUpperCase())}</b></div>
+      <div class="mean"><span>EN</span><div>${esc(c.en)}</div><span>VI</span><div lang="vi">${esc(c.vi)}</div></div>
+      <div class="ex"><div class="ja" lang="ja">${ja}</div><div class="tr">${esc(c.xen)}</div><div class="tr" lang="vi">${esc(c.xvi)}</div></div></div>`;
+  }
+  el.onclick=()=>{flipped=!flipped;renderCard()};
+}
+function step(d){
+  const n=idx+d; if(n<0||n>queue.length)return;
+  idx=n;flipped=false;renderCard();
+}
+function answer(ok){
+  if(!queue.length||idx>=queue.length)return;
+  const c=queue[idx];
+  if(ok){known[kkey(c)]=1}else{delete known[kkey(c)];queue.push(c)}
+  LS.set("n1.known",known);idx++;flipped=false;renderCard();renderList();
+}
+function renderList(){
+  const d=deck();
+  document.getElementById("list").innerHTML=`<p class="note">${d.title} ・ ${d.pages} ・ ${d.cards.length}語</p>`+
+   d.cards.map(c=>`<div class="row ${known[kkey(c)]?"known":""}"><div class="k" lang="ja">${c.w}<small>${c.r}</small></div>
+    <div class="v"><span class="s">${"★".repeat(c.s)}</span> ${esc(c.hv.toUpperCase())} · ${esc(c.en)}<br><span lang="vi">${esc(c.vi)}</span></div></div>`).join("");
+}
+/* ---------- Quiz ---------- */
+const QT={read:"漢字読み",fill:"文脈規定",syn:"言い換え類義"};
+let qz={deck:null,type:"mix",n:10,qs:[],i:0,pick:null,wrong:[],stage:"setup"};
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const DAK={"か":"が","き":"ぎ","く":"ぐ","け":"げ","こ":"ご","さ":"ざ","し":"じ","す":"ず","せ":"ぜ","そ":"ぞ","た":"だ","ち":"ぢ","つ":"づ","て":"で","と":"ど","は":"ば","ひ":"び","ふ":"ぶ","へ":"べ","ほ":"ぼ"};
+const UNDAK=Object.fromEntries(Object.entries(DAK).map(([a,b])=>[b,a]));
+const OU="おこそとのほもよろごぞどぼぽょうくすつぬふむゆるぐずぶぷゅ";
+const ADDY={"こ":"きょ","そ":"しょ","と":"ちょ","ご":"ぎょ","ぞ":"じょ","ほ":"ひょ","ぼ":"びょ","ろ":"りょ","く":"きゅ","す":"しゅ","ぐ":"ぎゅ","ず":"じゅ","る":"りゅ","ふ":"ひゅ"};
+function readingFakes(r,pool){
+  const s=new Set(),c=[...r],J=a=>a.join("");
+  const KST="かきくけこさしすせそたちつてとぱぴぷぺぽ";
+  c.forEach((ch,i)=>{
+    const pre=J(c.slice(0,i)),post=J(c.slice(i+1));
+    if(DAK[ch]) s.add(pre+DAK[ch]+post);
+    if(UNDAK[ch]&&ch!=="ぢ"&&ch!=="づ") s.add(pre+UNDAK[ch]+post);
+    if(OU.includes(ch)&&ch!=="う"&&c[i+1]!=="う") s.add(pre+ch+"う"+post);
+    if(ch==="う"&&i>0) s.add(pre+post);
+    if(ch==="ょ") s.add(pre+"ゅ"+post);
+    if(ch==="ゅ") s.add(pre+"ょ"+post);
+    if(ch==="ゃ"){s.add(pre+"ょ"+post);s.add(pre+"ゅ"+post);}
+    if(ADDY[ch]) s.add(pre+ADDY[ch]+post);
+    if("きしちにひみりぎじび".includes(ch)&&!"ゃゅょ".includes(c[i+1]||"")){s.add(pre+ch+"ょ"+post);s.add(pre+ch+"ゅ"+post);}
+    if(i>0&&i<c.length-1&&"くきちつ".includes(ch)&&KST.includes(c[i+1])) s.add(pre+"っ"+post);
+    if(i===0&&c.length>1&&KST.includes(c[1])) s.add(ch+"っ"+J(c.slice(1)));
+  });
+  [...s].forEach(x=>{if(x.length<2||/^[ゃゅょっう]/.test(x)||/(.)\1\1/.test(x))s.delete(x)});
+  s.delete(r);
+  let out=shuf([...s]).slice(0,3);
+  if(out.length<3){const near=pool.map(x=>x.r).filter(x=>x!==r&&!out.includes(x)&&x[0]===r[0]);
+    out=out.concat(shuf(near.length?near:pool.map(x=>x.r).filter(x=>x!==r&&!out.includes(x))).slice(0,3-out.length));}
+  return out;
+}
+function makeQ(c,type,cards){
+  const same=cards.filter(x=>x!==c&&x.p===c.p);
+  if(type==="read"){
+    const ja=esc(c.ja).split(c.w).join(`<u>${c.w}</u>`);
+    const opts=shuf([c.r,...readingFakes(c.r,cards)]);
+    return {c,type,html:ja,hint:"の言葉の読み方として最もよいもの",opts,ans:c.r};
+  }
+  if(type==="fill"){
+    const ja=esc(c.ja).split(c.w).join(`<span class="blank">（　）</span>`);
+    const kan=[...c.w].filter(ch=>/[\u4e00-\u9fff]/.test(ch));
+    const sib=same.filter(x=>kan.some(k=>x.w.includes(k)));
+    const base=shuf(same.length>=3?same:cards.filter(x=>x!==c));
+    const pick=[...new Set([...shuf(sib),...base].map(x=>x.w))].filter(w=>w!==c.w).slice(0,3);
+    const opts=shuf([c.w,...pick]);
+    return {c,type,html:ja,hint:"（　）に入れるのに最もよいもの",opts,ans:c.w};
+  }
+  const ja=esc(c.ja).split(c.w).join(`<u>${c.w}</u>`);
+  const others=shuf(cards.filter(x=>x!==c&&x.syn&&x.syn!==c.syn));
+  const pref=others.filter(x=>x.p===c.p);
+  const fakes=[...new Set((pref.length>=3?pref:others).map(x=>x.syn))].slice(0,3);
+  return {c,type,html:ja,hint:"の言葉に意味が最も近いもの",opts:shuf([c.syn,...fakes]),ans:c.syn};
+}
+function startQuiz(){
+  const d=DECKS.find(x=>x.id===qz.deck)||deck();
+  const cards=d.cards.filter(c=>state.stars.includes(c.s));
+  const pool=shuf(cards);const qs=[];
+  for(const c of pool){
+    if(qs.length>=qz.n)break;
+    let types=qz.type==="mix"?shuf(["read","fill","syn"]):[qz.type];
+    const t=types.find(t=>t!=="syn"||c.syn);
+    if(t) qs.push(makeQ(c,t,d.cards));
+  }
+  qz={...qz,qs,i:0,pick:null,wrong:[],stage:qs.length?"q":"empty"};
+  renderQuiz();
+}
+function renderQuiz(){
+  const el=document.getElementById("quiz");
+  if(!qz.deck) qz.deck=state.deck;
+  if(qz.stage==="setup"||qz.stage==="empty"){
+    const synN=(DECKS.find(x=>x.id===qz.deck)||deck()).cards.filter(c=>c.syn&&state.stars.includes(c.s)).length;
+    el.innerHTML=`<div class="qbox">
+      <div class="field"><span>章</span><select id="qdeck" aria-label="章">${DECKS.map(d=>`<option value="${d.id}" ${d.id===qz.deck?"selected":""}>${d.title} (${d.cards.length})</option>`).join("")}</select></div>
+      <div class="field"><span>重要度</span><div class="chips">${[3,2,1].map(s=>`<button data-qs="${s}" aria-pressed="${state.stars.includes(s)}">${"★".repeat(s)}</button>`).join("")}</div></div>
+      <div class="field"><span>問題の種類</span><div class="chips">${[["mix","ミックス"],["read",QT.read],["fill",QT.fill],["syn",QT.syn]].map(([k,l])=>`<button data-qt="${k}" aria-pressed="${qz.type===k}">${l}</button>`).join("")}</div></div>
+      <div class="field"><span>問題数</span><div class="chips">${[10,20,30].map(n=>`<button data-qn="${n}" aria-pressed="${qz.n===n}">${n}</button>`).join("")}</div></div>
+      ${qz.type==="syn"||qz.type==="mix"?`<p class="note">言い換え類義の問題：この条件で ${synN}語（★★★から順次追加）</p>`:""}
+      ${qz.stage==="empty"?`<p class="note" style="color:var(--shu)">この条件に合う問題がありません。重要度や種類を変えてください。</p>`:""}
+      <button class="btn primary" id="qstart">スタート</button></div>`;
+    el.querySelector("#qdeck").onchange=e=>{qz.deck=e.target.value;renderQuiz()};
+    el.querySelectorAll("[data-qs]").forEach(b=>b.onclick=()=>{const s=+b.dataset.qs;state.stars=state.stars.includes(s)?state.stars.filter(x=>x!==s):[...state.stars,s];if(!state.stars.length)state.stars=[s];save();renderQuiz();
+      document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",state.stars.includes(+x.dataset.s)));buildQueue()});
+    el.querySelectorAll("[data-qt]").forEach(b=>b.onclick=()=>{qz.type=b.dataset.qt;renderQuiz()});
+    el.querySelectorAll("[data-qn]").forEach(b=>b.onclick=()=>{qz.n=+b.dataset.qn;renderQuiz()});
+    el.querySelector("#qstart").onclick=startQuiz;
+    return;
+  }
+  if(qz.stage==="done"){
+    const n=qz.qs.length,ok=n-qz.wrong.length;
+    el.innerHTML=`<div class="qbox"><div class="qtype">結果</div><div class="score">${ok} / ${n}</div>
+      ${qz.wrong.length?`<div class="list">${qz.wrong.map(q=>`<div class="row"><div class="k" lang="ja">${q.c.w}<small>${q.c.r}</small></div><div class="v">${QT[q.type]}<br>${esc(q.c.en)} · <span lang="vi">${esc(q.c.vi)}</span></div></div>`).join("")}</div>
+      <button class="btn again" id="qtoagain">間違えた${qz.wrong.length}語を「もう一度」に追加</button>`:`<p class="note">全問正解！</p>`}
+      <div class="actions"><button class="btn" id="qsetup">設定に戻る</button><button class="btn primary" id="qagain">もう一回</button></div></div>`;
+    const ta=el.querySelector("#qtoagain");
+    if(ta) ta.onclick=()=>{qz.wrong.forEach(q=>{delete known[(DECKS.find(x=>x.id===qz.deck)||deck()).id+"|"+q.c.w+"|"+q.c.r]});LS.set("n1.known",known);ta.disabled=true;ta.textContent="追加しました";buildQueue()};
+    el.querySelector("#qsetup").onclick=()=>{qz.stage="setup";renderQuiz()};
+    el.querySelector("#qagain").onclick=startQuiz;
+    return;
+  }
+  const q=qz.qs[qz.i],L="1234";
+  el.onclick=e=>{if(!e.target.closest("#qquit"))return;
+    const answered=qz.i+(qz.stage==="a"?1:0);
+    if(answered>0){qz.qs=qz.qs.slice(0,answered);qz.stage="done"}else qz.stage="setup";
+    renderQuiz();window.scrollTo({top:0})};
+  const head=`<button class="linkish" id="qquit">‹ やめる</button><div class="stat"><span>第${qz.i+1}問 / ${qz.qs.length}</span><span>${QT[q.type]}</span></div><div class="bar"><i style="width:${(qz.i/qz.qs.length)*100}%"></i></div>`;
+  if(qz.stage==="q"){
+    el.innerHTML=head+`<div class="qbox"><div class="note" lang="ja">${q.type==="fill"?"":"＿＿"}${q.hint}を、1・2・3・4から一つ選びなさい。</div>
+      <div class="qtext" lang="ja">${q.html}</div>
+      <div class="opts">${q.opts.map((o,k)=>`<button class="opt" data-o="${k}" lang="ja"><b>${L[k]}</b>${esc(o)}</button>`).join("")}</div></div>`;
+    el.querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{qz.pick=q.opts[+b.dataset.o];if(qz.pick!==q.ans)qz.wrong.push(q);qz.stage="a";renderQuiz();window.scrollTo({top:0})});
+    return;
+  }
+  const ok=qz.pick===q.ans,c=q.c;
+  const full=esc(c.ja).split(c.w).join(`<mark>${c.w}</mark>`);
+  el.innerHTML=head+`<div class="qbox">
+    <div class="verdict ${ok?"ok":"ng"}">${ok?"○ 正解":"× 不正解"}</div>
+    <div class="opts">${q.opts.map((o,k)=>`<div class="opt ${o===q.ans?"right":o===qz.pick?"wrong":""}" lang="ja"><b>${L[k]}</b>${esc(o)}</div>`).join("")}</div>
+    <div class="back">
+      <div class="word" lang="ja" style="font-size:2.2rem">${c.w}</div>
+      <div class="rd" lang="ja">${c.r}</div>
+      <div class="hv">Hán Việt: <b>${esc(c.hv.toUpperCase())}</b> · <span class="stars" style="color:var(--star)">${"★".repeat(c.s)}</span></div>
+      <div class="mean"><span>EN</span><div>${esc(c.en)}</div><span>VI</span><div lang="vi">${esc(c.vi)}</div>${c.syn?`<span>≈</span><div lang="ja">${esc(c.syn)}</div>`:""}</div>
+      ${q.type==="read"&&!ok?`<p class="note">あなたの答え：<b lang="ja">${esc(qz.pick)}</b>　長音（う）・促音（っ）・拗音（ゃゅょ）・濁音（゛）に注意。</p>`:""}
+      ${q.type!=="read"&&!ok?`<p class="note">あなたの答え：<b lang="ja">${esc(qz.pick)}</b>${(()=>{const o=(DECKS.find(x=>x.id===qz.deck)||deck()).cards.find(x=>x.w===qz.pick||x.syn===qz.pick);return o?` = ${esc(o.en)} · <span lang="vi">${esc(o.vi)}</span>`:""})()}</p>`:""}
+      <div class="ex"><div class="ja" lang="ja">${full}</div><div class="tr">${esc(c.xen)}</div><div class="tr" lang="vi">${esc(c.xvi)}</div></div>
+    </div>
+    <button class="btn primary" id="qnext">${qz.i+1<qz.qs.length?"次の問題 ›":"結果を見る"}</button></div>`;
+  el.querySelector("#qnext").onclick=()=>{qz.i++;qz.pick=null;qz.stage=qz.i<qz.qs.length?"q":"done";renderQuiz();window.scrollTo({top:0})};
+}
+function show(v){state.view=v;save();
+  if(v==="quiz"&&qz.stage==="setup")renderQuiz();
+  ["cards","quiz","plan","list"].forEach(x=>{document.getElementById("v-"+x).hidden=x!==v;document.getElementById("tab-"+x).setAttribute("aria-selected",x===v)});
+}
+function save(){LS.set("n1.state",state)}
+
+document.getElementById("deck").innerHTML=DECKS.map(d=>`<option value="${d.id}">${d.title} (${d.cards.length})</option>`).join("");
+document.getElementById("deck").onchange=e=>{state.deck=e.target.value;save();buildQueue()};
+document.getElementById("ldeck").innerHTML=document.getElementById("deck").innerHTML;
+document.getElementById("ldeck").onchange=e=>{state.deck=e.target.value;save();buildQueue()};
+document.querySelectorAll(".seg button").forEach(b=>{
+  b.setAttribute("aria-pressed",state.stars.includes(+b.dataset.s));
+  b.onclick=()=>{const s=+b.dataset.s;state.stars=state.stars.includes(s)?state.stars.filter(x=>x!==s):[...state.stars,s];if(!state.stars.length)state.stars=[s];
+    document.querySelectorAll(".seg button").forEach(x=>x.setAttribute("aria-pressed",state.stars.includes(+x.dataset.s)));save();buildQueue()}});
+const hk=document.getElementById("hideKnown");hk.checked=state.hide;hk.onchange=()=>{state.hide=hk.checked;save();buildQueue()};
+document.getElementById("shuffle").onclick=()=>buildQueue(true);
+document.getElementById("reset").onclick=e=>{const b=e.target;if(b.dataset.armed){deck().cards.forEach(c=>delete known[kkey(c)]);LS.set("n1.known",known);b.textContent="この章をリセット";delete b.dataset.armed;buildQueue()}else{b.dataset.armed=1;b.textContent="もう一度押すとリセット"}};
+document.getElementById("again").onclick=()=>answer(false);
+document.getElementById("got").onclick=()=>answer(true);
+document.getElementById("prev").onclick=()=>step(-1);
+document.getElementById("next").onclick=()=>step(1);
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+document.addEventListener("keydown",e=>{if(state.view!=="cards"||e.target.tagName==="SELECT")return;
+  if(e.key===" "){e.preventDefault();flipped=!flipped;renderCard()}else if(e.key==="ArrowRight")step(1);else if(e.key==="ArrowLeft")step(-1);else if(e.key==="2")answer(true);else if(e.key==="1")answer(false)});
+renderToday();renderPlan();buildQueue();show("plan");
+
+/* ---------- Sync across devices (db) ---------- */
+(async()=>{
+  const syncEl=document.getElementById("sync");
+  const say=t=>{syncEl.textContent=t};
+  let db=null,user=null;
+  try{[db,user]=await Promise.all([claude.use("db"),claude.use("user")])}catch(e){}
+  if(!db||!user){say("");return}
+  const uid=await user.id(); if(!uid){say("");return}
+  const col=db.collection("data/users/"+uid);
+  const ts=LS.get("n1.ts",{});              // last change time per doc id (deck ids + "plan")
+  const sig={};                              // last synced JSON per doc id
+  const partOf=id=>id==="plan"?done:Object.fromEntries(Object.entries(known).filter(([k])=>k.startsWith(id+"|")));
+  const ids=()=>[...DECKS.map(d=>d.id),"plan"];
+  ids().forEach(id=>sig[id]=JSON.stringify(partOf(id)));
+  const dirty=new Set();let timer=null,busy=false,ready=false;
+  async function flush(){
+    if(busy||!ready)return;busy=true;
+    try{
+      while(dirty.size){const id=[...dirty][0];dirty.delete(id);
+        const body=partOf(id);sig[id]=JSON.stringify(body);
+        await col.doc(id).set({t:ts[id]||Date.now(),v:body});}
+      say("✓ 同期済み");
+    }catch(e){say("同期エラー");}
+    busy=false;
+  }
+  function mark(){
+    let any=false;
+    ids().forEach(id=>{const j=JSON.stringify(partOf(id));if(j!==sig[id]){sig[id]=j;ts[id]=Date.now();dirty.add(id);any=true}});
+    if(any){LS.set("n1.ts",ts);say("同期中…");clearTimeout(timer);timer=setTimeout(flush,1500)}
+  }
+  const origSet=LS.set;
+  LS.set=function(k,v){origSet.call(LS,k,v);if(k==="n1.known"||k==="n1.done")mark()};
+  say("同期中…");
+  col.onSnapshot(snap=>{
+    let changed=false;const seen=new Set();
+    snap.docs.forEach(d=>{const id=d.id;seen.add(id);const r=d.data()||{};
+      if(!r.t||r.t<=(ts[id]||0))return;            // ours is newer or same
+      if(id==="plan"){done=Object.assign({},r.v||{})}
+      else{Object.keys(known).forEach(k=>{if(k.startsWith(id+"|"))delete known[k]});Object.assign(known,r.v||{})}
+      ts[id]=r.t;sig[id]=JSON.stringify(partOf(id));changed=true;});
+    if(!ready){ready=true;
+      ids().forEach(id=>{if(!seen.has(id)&&sig[id]!=="{}")dirty.add(id);
+        else if(seen.has(id)){const d=snap.docs.find(x=>x.id===id);if((ts[id]||0)>((d.data()||{}).t||0))dirty.add(id)}});
+      dirty.size?flush():say("✓ 同期済み");}
+    if(changed){origSet.call(LS,"n1.known",known);origSet.call(LS,"n1.done",done);LS.set("n1.ts",ts);
+      renderToday();renderPlan();renderList();if(state.view!=="cards")buildQueue();else renderCard();}
+  },()=>say("同期エラー"));
+})();
+</script>
+
+<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});</script>
+</body></html>
