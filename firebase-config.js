@@ -1,5 +1,5 @@
 window.FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAZ" + "WV7zr1gNPU52" + "YPfELtLOVftqJ_WvgfM",,
+  apiKey: "AIzaSyAZ" + "WV7zr1gNPU52" + "YPfELtLOVftqJ_WvgfM",
   authDomain: "koharu-e5c32.firebaseapp.com",
   projectId: "koharu-e5c32",
   storageBucket: "koharu-e5c32.firebasestorage.app",
